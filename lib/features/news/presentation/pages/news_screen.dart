@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:softbuzz_app/features/dashboard/presentation/widgets/softbuzz_app_bar.dart';
 import 'package:softbuzz_app/features/news/presentation/view_model/news_viewmodel.dart';
 import 'package:softbuzz_app/features/news/presentation/widgets/news_card.dart';
 import 'package:softbuzz_app/features/news/presentation/pages/news_detail_page.dart';
@@ -46,36 +47,59 @@ class _NewsScreenState extends ConsumerState<NewsScreen>
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF0f1117)
-          : const Color(0xFFf8fafc),
-      appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0f1117) : Colors.white,
-        elevation: 0,
-        title: const Text(
-          'News',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: false,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          indicatorColor: const Color(0xFF22c55e),
-          labelColor: const Color(0xFF22c55e),
-          unselectedLabelColor: Colors.grey,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+          ? const Color(0xFF0F1419)
+          : const Color(0xFFF8F9FE),
+      appBar: SoftBuzzAppBar(
+        title: 'News',
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search_rounded, size: 22),
           ),
-          onTap: (i) => ref
-              .read(newsListViewModelProvider.notifier)
-              .getNews(category: _categories[i].$2),
-          tabs: _categories.map((c) => Tab(text: c.$1)).toList(),
-        ),
+        ],
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _categories.map((_) => _Body(state: state)).toList(),
+      body: Column(
+        children: [
+          Container(
+            color: isDark ? const Color(0xFF0F1419) : Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              indicatorColor: const Color(0xFF22c55e),
+              indicatorWeight: 2.5,
+              labelColor: const Color(0xFF22c55e),
+              unselectedLabelColor: Colors.grey,
+              labelStyle: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              onTap: (i) => ref
+                  .read(newsListViewModelProvider.notifier)
+                  .getNews(category: _categories[i].$2),
+              tabs: _categories.map((c) => Tab(text: c.$1)).toList(),
+            ),
+          ),
+          Container(
+            height: 1,
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.grey.shade100,
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: _categories.map((_) => _Body(state: state)).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -127,7 +151,6 @@ class _Body extends ConsumerWidget {
 
 class _EmptyView extends StatelessWidget {
   const _EmptyView();
-
   @override
   Widget build(BuildContext context) {
     return const Center(
@@ -150,7 +173,6 @@ class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   const _ErrorView({required this.message, required this.onRetry});
-
   @override
   Widget build(BuildContext context) {
     return Center(

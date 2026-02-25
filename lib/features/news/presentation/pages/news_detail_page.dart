@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:softbuzz_app/features/news/domain/entities/news_entity.dart';
 import 'package:softbuzz_app/features/news/presentation/view_model/news_viewmodel.dart';
@@ -30,15 +31,31 @@ class _NewsDetailPageState extends ConsumerState<NewsDetailPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(newsDetailViewModelProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return switch (state.status) {
-      NewsLoadStatus.loading => const Scaffold(
-        body: Center(
+      NewsLoadStatus.loading => Scaffold(
+        backgroundColor: isDark
+            ? const Color(0xFF0F1419)
+            : const Color(0xFFF8F9FE),
+        appBar: AppBar(
+          backgroundColor: isDark ? const Color(0xFF0F1419) : Colors.white,
+          elevation: 0,
+          leading: _BackButton(isDark: isDark),
+        ),
+        body: const Center(
           child: CircularProgressIndicator(color: Color(0xFF22c55e)),
         ),
       ),
       NewsLoadStatus.error => Scaffold(
-        appBar: AppBar(),
+        backgroundColor: isDark
+            ? const Color(0xFF0F1419)
+            : const Color(0xFFF8F9FE),
+        appBar: AppBar(
+          backgroundColor: isDark ? const Color(0xFF0F1419) : Colors.white,
+          elevation: 0,
+          leading: _BackButton(isDark: isDark),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -60,6 +77,34 @@ class _NewsDetailPageState extends ConsumerState<NewsDetailPage> {
       _ when state.article != null => _ArticleView(article: state.article!),
       _ => const Scaffold(body: SizedBox()),
     };
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  final bool isDark;
+  const _BackButton({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 16,
+            color: isDark ? Colors.white : const Color(0xFF0F1419),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -88,15 +133,58 @@ class _ArticleView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF0f1117)
-          : const Color(0xFFf8fafc),
+          ? const Color(0xFF0F1419)
+          : const Color(0xFFF8F9FE),
       body: CustomScrollView(
         slivers: [
-          // ── SliverAppBar with cover image
+          // ── SliverAppBar ──────────────────────────────────────────
           SliverAppBar(
             pinned: true,
             expandedHeight: article.coverImage.isNotEmpty ? 240 : 0,
-            backgroundColor: isDark ? const Color(0xFF0f1117) : Colors.white,
+            backgroundColor: isDark ? const Color(0xFF0F1419) : Colors.white,
+            systemOverlayStyle: article.coverImage.isNotEmpty
+                ? SystemUiOverlayStyle.light
+                : isDark
+                ? SystemUiOverlayStyle.light
+                : SystemUiOverlayStyle.dark,
+            leading: Padding(
+              padding: const EdgeInsets.all(8),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: article.coverImage.isNotEmpty
+                        ? Colors.white.withOpacity(0.15)
+                        : isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: article.coverImage.isNotEmpty
+                        ? Colors.white
+                        : isDark
+                        ? Colors.white
+                        : const Color(0xFF0F1419),
+                  ),
+                ),
+              ),
+            ),
+            title: article.coverImage.isEmpty
+                ? Text(
+                    'Article',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? const Color(0xFFE8EAED)
+                          : const Color(0xFF0F1419),
+                    ),
+                  )
+                : null,
             flexibleSpace: article.coverImage.isNotEmpty
                 ? FlexibleSpaceBar(
                     background: Stack(
@@ -111,7 +199,6 @@ class _ArticleView extends StatelessWidget {
                                 : Colors.grey.shade200,
                           ),
                         ),
-                        // Gradient overlay so back button is visible
                         DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -128,12 +215,20 @@ class _ArticleView extends StatelessWidget {
                     ),
                   )
                 : null,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.06)
+                    : Colors.grey.shade100,
+              ),
+            ),
           ),
 
-          // ── Article content
+          // ── Article Content ───────────────────────────────────────
           SliverToBoxAdapter(
-            child: Container(
-              color: isDark ? const Color(0xFF0f1117) : const Color(0xFFf8fafc),
+            child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,20 +260,24 @@ class _ArticleView extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
                   // Title
                   Text(
                     article.title,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      fontFamily: 'Inter',
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       height: 1.3,
+                      color: isDark
+                          ? const Color(0xFFE8EAED)
+                          : const Color(0xFF0F1419),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // Summary with left accent border
+                  // Summary
                   Container(
                     padding: const EdgeInsets.only(left: 12),
                     decoration: BoxDecoration(
@@ -192,16 +291,19 @@ class _ArticleView extends StatelessWidget {
                     child: Text(
                       article.summary,
                       style: TextStyle(
+                        fontFamily: 'Inter',
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white70 : Colors.grey.shade700,
+                        color: isDark
+                            ? const Color(0xFFB4B8BB)
+                            : const Color(0xFF6B7280),
                         height: 1.6,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Meta row
+                  // Meta
                   Row(
                     children: [
                       CircleAvatar(
@@ -219,39 +321,39 @@ class _ArticleView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        article.author,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      Expanded(
+                        child: Text(
+                          article.author,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: isDark
+                                ? const Color(0xFFE8EAED)
+                                : const Color(0xFF0F1419),
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Text(
-                        '  ·  ',
-                        style: TextStyle(color: Colors.grey.shade400),
                       ),
                       Text(
                         _timeAgo(article.displayDate),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: Colors.grey,
                         ),
                       ),
-                      Text(
-                        '  ·  ',
-                        style: TextStyle(color: Colors.grey.shade400),
-                      ),
+                      const SizedBox(width: 8),
                       Icon(
                         Icons.access_time_outlined,
                         size: 12,
-                        color: Colors.grey.shade400,
+                        color: Colors.grey.shade500,
                       ),
                       const SizedBox(width: 3),
                       Text(
                         '${article.readTime} min',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: Colors.grey,
                         ),
                       ),
                     ],
@@ -265,13 +367,20 @@ class _ArticleView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Article body paragraphs
+                  // Body paragraphs
                   ...paragraphs.map(
                     (para) => Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         para,
-                        style: const TextStyle(fontSize: 15, height: 1.8),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          height: 1.8,
+                          color: isDark
+                              ? const Color(0xFFE8EAED)
+                              : const Color(0xFF2D3142),
+                        ),
                       ),
                     ),
                   ),
@@ -298,9 +407,10 @@ class _ArticleView extends StatelessWidget {
                               child: Text(
                                 '#$tag',
                                 style: TextStyle(
+                                  fontFamily: 'Inter',
                                   fontSize: 12,
                                   color: isDark
-                                      ? Colors.white60
+                                      ? const Color(0xFFB4B8BB)
                                       : Colors.grey.shade600,
                                 ),
                               ),

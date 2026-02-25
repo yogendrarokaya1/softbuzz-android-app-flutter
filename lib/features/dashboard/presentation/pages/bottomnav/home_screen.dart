@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:softbuzz_app/features/dashboard/presentation/widgets/softbuzz_app_bar.dart';
 import 'package:softbuzz_app/features/matches/domain/entities/match_entity.dart';
 import 'package:softbuzz_app/features/matches/domain/usecases/match_usecases.dart';
 import 'package:softbuzz_app/features/matches/presentation/pages/matches_detail_page.dart';
@@ -45,8 +46,20 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF0f1117)
-          : const Color(0xFFf8fafc),
+          ? const Color(0xFF0F1419)
+          : const Color(0xFFF8F9FE),
+      appBar: SoftBuzzHomeAppBar(
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search_rounded, size: 22),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_outlined, size: 22),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         color: const Color(0xFF22c55e),
         onRefresh: () async {
@@ -56,65 +69,7 @@ class HomeScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            // ── App Bar ───────────────────────────────────────────────
-            SliverAppBar(
-              floating: true,
-              backgroundColor: isDark ? const Color(0xFF0f1117) : Colors.white,
-              elevation: 0,
-              title: Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF22c55e),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'S',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  RichText(
-                    text: const TextSpan(
-                      style: TextStyle(fontSize: 18),
-                      children: [
-                        TextSpan(
-                          text: 'Soft',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: 'Buzz',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF22c55e),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search_rounded),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.notifications_outlined),
-                ),
-              ],
-            ),
-
-            // ── Breaking Ticker ───────────────────────────────────────
+            // ── Breaking Ticker ─────────────────────────────────────
             breakingAsync.when(
               data: (breaking) => breaking.isEmpty
                   ? const SliverToBoxAdapter(child: SizedBox.shrink())
@@ -126,7 +81,7 @@ class HomeScreen extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
 
-            // ── Hero Banner ───────────────────────────────────────────
+            // ── Hero Banner ─────────────────────────────────────────
             homeAsync.when(
               data: (home) => SliverToBoxAdapter(
                 child: _HeroBanner(
@@ -142,10 +97,10 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // ── Live Matches ──────────────────────────────────────────
+            // ── Live Matches ────────────────────────────────────────
             SliverToBoxAdapter(
               child: _SectionHeader(
-                title: '🟢 Live Matches',
+                title: '🟢  Live Matches',
                 onSeeAll: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MatchesScreen()),
@@ -170,10 +125,10 @@ class HomeScreen extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
 
-            // ── Upcoming Matches ──────────────────────────────────────
+            // ── Upcoming ────────────────────────────────────────────
             SliverToBoxAdapter(
               child: _SectionHeader(
-                title: '📅 Upcoming',
+                title: '📅  Upcoming',
                 onSeeAll: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MatchesScreen()),
@@ -191,10 +146,10 @@ class HomeScreen extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
 
-            // ── Latest News ───────────────────────────────────────────
+            // ── Latest News ─────────────────────────────────────────
             SliverToBoxAdapter(
               child: _SectionHeader(
-                title: '📰 Latest News',
+                title: '📰  Latest News',
                 onSeeAll: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const NewsScreen()),
@@ -245,7 +200,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ── Match List Sliver ─────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 class _MatchListSliver extends StatelessWidget {
   final List<MatchEntity> matches;
@@ -275,8 +230,6 @@ class _MatchListSliver extends StatelessWidget {
     );
   }
 }
-
-// ── Breaking Ticker ───────────────────────────────────────────────────────────
 
 class _BreakingTicker extends StatelessWidget {
   final List<NewsEntity> breaking;
@@ -322,8 +275,6 @@ class _BreakingTicker extends StatelessWidget {
     );
   }
 }
-
-// ── Hero Banner ───────────────────────────────────────────────────────────────
 
 class _HeroBanner extends StatelessWidget {
   final int liveCount;
@@ -397,6 +348,7 @@ class _HeroBanner extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
                   ),
                 ),
                 ShaderMask(
@@ -409,6 +361,7 @@ class _HeroBanner extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
                     ),
                   ),
                 ),
@@ -486,8 +439,6 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-// ── Section Header ────────────────────────────────────────────────────────────
-
 class _SectionHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onSeeAll;
@@ -495,13 +446,19 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
       child: Row(
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: isDark ? const Color(0xFFE8EAED) : const Color(0xFF0F1419),
+            ),
           ),
           const Spacer(),
           if (onSeeAll != null)
@@ -510,9 +467,10 @@ class _SectionHeader extends StatelessWidget {
               child: const Text(
                 'See all →',
                 style: TextStyle(
+                  fontFamily: 'Inter',
                   fontSize: 13,
                   color: Color(0xFF3b82f6),
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -521,8 +479,6 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-
-// ── Empty Section — plain widget, NOT a Sliver ────────────────────────────────
 
 class _EmptySection extends StatelessWidget {
   final String label;

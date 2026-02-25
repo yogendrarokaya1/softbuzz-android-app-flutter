@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:softbuzz_app/features/auth/presentation/view_model/auth_viewmodel.dart';
+import 'package:softbuzz_app/features/dashboard/presentation/widgets/softbuzz_app_bar.dart';
 import 'package:softbuzz_app/features/matches/presentation/pages/matches_screen.dart';
 import 'package:softbuzz_app/features/news/presentation/pages/news_screen.dart';
 
@@ -15,93 +16,24 @@ class MoreScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF0f1117)
-          : const Color(0xFFf8fafc),
-      appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0f1117) : Colors.white,
-        elevation: 0,
-        title: const Text(
-          'More',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: false,
-      ),
+          ? const Color(0xFF0F1419)
+          : const Color(0xFFF8F9FE),
+      appBar: const SoftBuzzAppBar(title: 'More'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── User profile card ─────────────────────────────────────
-          if (user != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0f172a), Color(0xFF1e293b)],
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: const Color(0xFF22c55e),
-                    child: Text(
-                      (user.firstName?.isNotEmpty == true
-                              ? user.firstName![0]
-                              : 'U')
-                          .toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${user.firstName ?? ''} ${user.lastName ?? ''}'
-                              .trim(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (user.email?.isNotEmpty == true)
-                          Text(
-                            user.email!,
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.edit_outlined,
-                      color: Colors.white54,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // ── Profile card ────────────────────────────────────────
+          if (user != null) ...[
+            _ProfileCard(user: user),
+            const SizedBox(height: 20),
+          ],
 
-          // ── Cricket ───────────────────────────────────────────────
           _SectionLabel('Cricket'),
           _MenuItem(
             icon: Icons.sports_cricket,
             iconColor: const Color(0xFF22c55e),
             label: 'All Matches',
+            isDark: isDark,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MatchesScreen()),
@@ -111,6 +43,7 @@ class MoreScreen extends ConsumerWidget {
             icon: Icons.newspaper_rounded,
             iconColor: const Color(0xFF3b82f6),
             label: 'News & Articles',
+            isDark: isDark,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const NewsScreen()),
@@ -118,39 +51,40 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // ── Account ───────────────────────────────────────────────
           _SectionLabel('Account'),
           _MenuItem(
             icon: Icons.person_outline,
             iconColor: const Color(0xFFa855f7),
             label: 'Edit Profile',
+            isDark: isDark,
             onTap: () {},
           ),
           _MenuItem(
             icon: Icons.lock_outline,
             iconColor: const Color(0xFFf97316),
             label: 'Change Password',
+            isDark: isDark,
             onTap: () {},
           ),
           const SizedBox(height: 16),
 
-          // ── App ───────────────────────────────────────────────────
           _SectionLabel('App'),
           _MenuItem(
             icon: Icons.info_outline,
             iconColor: Colors.grey,
             label: 'About SoftBuzz',
+            isDark: isDark,
             onTap: () {},
           ),
           _MenuItem(
             icon: Icons.star_outline,
             iconColor: const Color(0xFFf59e0b),
             label: 'Rate the App',
+            isDark: isDark,
             onTap: () {},
           ),
           const SizedBox(height: 24),
 
-          // ── Logout ────────────────────────────────────────────────
           if (user != null)
             SizedBox(
               width: double.infinity,
@@ -164,6 +98,7 @@ class MoreScreen extends ConsumerWidget {
                 label: const Text(
                   'Log Out',
                   style: TextStyle(
+                    fontFamily: 'Inter',
                     color: Color(0xFFef4444),
                     fontWeight: FontWeight.w600,
                   ),
@@ -184,6 +119,74 @@ class MoreScreen extends ConsumerWidget {
   }
 }
 
+class _ProfileCard extends StatelessWidget {
+  final dynamic user;
+  const _ProfileCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0f172a), Color(0xFF1e293b)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: const Color(0xFF22c55e),
+            child: Text(
+              (user.firstName?.isNotEmpty == true ? user.firstName![0] : 'U')
+                  .toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim(),
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (user.email?.isNotEmpty == true)
+                  Text(
+                    user.email!,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              Icons.edit_outlined,
+              color: Colors.white54,
+              size: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel(this.label);
@@ -195,6 +198,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: const TextStyle(
+          fontFamily: 'Inter',
           fontSize: 10,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.5,
@@ -209,23 +213,23 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String label;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _MenuItem({
     required this.icon,
     required this.iconColor,
     required this.label,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1e2433) : Colors.white,
+        color: isDark ? const Color(0xFF1A1F26) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isDark ? Colors.white.withOpacity(0.07) : Colors.grey.shade200,
@@ -243,7 +247,11 @@ class _MenuItem extends StatelessWidget {
         ),
         title: Text(
           label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios_rounded,
