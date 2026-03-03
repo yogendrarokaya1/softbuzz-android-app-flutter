@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:softbuzz_app/core/api/api_client.dart';
 import 'package:softbuzz_app/core/api/api_endpoints.dart';
@@ -6,7 +7,6 @@ import 'package:softbuzz_app/core/services/storage/user_session_service.dart';
 import 'package:softbuzz_app/features/auth/data/datasources/auth_datasource.dart';
 import 'package:softbuzz_app/features/auth/data/models/auth_api_model.dart';
 
-// Create provider
 final authRemoteDatasourceProvider = Provider<IAuthRemoteDataSource>((ref) {
   return AuthRemoteDatasource(
     apiClient: ref.read(apiClientProvider),
@@ -30,7 +30,6 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
 
   @override
   Future<AuthApiModel?> getUserById(String authId) {
-    // TODO: implement getUserById
     throw UnimplementedError();
   }
 
@@ -45,7 +44,6 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
       final data = response.data['data'] as Map<String, dynamic>;
       final user = AuthApiModel.fromJson(data);
 
-      // Save to session
       await _userSessionService.saveUserSession(
         userId: user.id!,
         email: user.email ?? '',
@@ -53,14 +51,10 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
         lastName: user.lastName ?? '',
         username: user.username ?? '',
       );
-
-      // Save token to TokenService
       final token = response.data['token'];
-      // Later store token in secure storage
       await _tokenService.saveToken(token);
       return user;
     }
-
     return null;
   }
 
@@ -73,10 +67,63 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
 
     if (response.data['success'] == true) {
       final data = response.data['data'] as Map<String, dynamic>;
-      final registeredUser = AuthApiModel.fromJson(data);
-      return registeredUser;
+      return AuthApiModel.fromJson(data);
+    }
+    return user;
+  }
+
+  // ── Update Profile ──────────────────────────────────────────────────────────
+
+  @override
+  Future<AuthApiModel> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String username,
+    String? profilePicturePath,
+  }) async {
+    late final Response response;
+
+    if (profilePicturePath != null) {
+      // Use multipart when image selected — matches ApiClient.uploadFile signature
+      final formData = FormData.fromMap({
+        'firstName': firstName,
+        'lastName': lastName,
+        'username': username,
+        'profilePicture': await MultipartFile.fromFile(
+          profilePicturePath,
+          filename: profilePicturePath.split('/').last,
+        ),
+      });
+      response = await _apiClient.uploadFile(
+        ApiEndpoints.updateProfile,
+        formData: formData,
+      );
+    } else {
+      response = await _apiClient.put(
+        ApiEndpoints.updateProfile,
+        data: {
+          'firstName': firstName,
+          'lastName': lastName,
+          'username': username,
+        },
+      );
     }
 
-    return user;
+    final data = response.data['data'] as Map<String, dynamic>;
+    return AuthApiModel.fromJson(data);
+  }
+
+  // ── Change Password ─────────────────────────────────────────────────────────
+
+  @override
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.changePassword,
+      data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+    );
+    return response.data['success'] == true;
   }
 }

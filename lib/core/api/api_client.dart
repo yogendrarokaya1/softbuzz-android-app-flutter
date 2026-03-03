@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:softbuzz_app/core/api/api_endpoints.dart';
 
-// Provider for ApiClient
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient();
 });
@@ -27,10 +26,8 @@ class ApiClient {
       ),
     );
 
-    // Add interceptors
     _dio.interceptors.add(_AuthInterceptor());
 
-    // Auto retry on network failures
     _dio.interceptors.add(
       RetryInterceptor(
         dio: _dio,
@@ -49,7 +46,6 @@ class ApiClient {
       ),
     );
 
-    // Only add logger in debug mode
     if (kDebugMode) {
       _dio.interceptors.add(
         PrettyDioLogger(
@@ -116,26 +112,25 @@ class ApiClient {
     );
   }
 
+  // ── Upload file using FormData ─────────────────────────────────────────────
   Future<Response> uploadFile(
     String path, {
     required FormData formData,
     Options? options,
     ProgressCallback? onSendProgress,
   }) async {
-    return _dio.post(
+    return _dio.put(
       path,
       data: formData,
-      options: options,
+      options: options ?? Options(contentType: 'multipart/form-data'),
       onSendProgress: onSendProgress,
     );
   }
 }
 
-// Auth Interceptor to add JWT token to requests
+// Auth Interceptor
 class _AuthInterceptor extends Interceptor {
   static const String _tokenKey = 'auth_token';
-
-  // Only these paths skip token injection
   static const _publicPaths = [ApiEndpoints.login, ApiEndpoints.register];
 
   @override

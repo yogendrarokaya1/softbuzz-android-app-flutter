@@ -36,6 +36,11 @@ class AuthRepository implements IAuthRepository {
        _authRemoteDataSource = authRemoteDataSource,
        _networkInfo = networkInfo;
 
+  Failure _dioFailure(DioException e, String fallback) => ApiFailure(
+    message: e.response?.data?['message']?.toString() ?? fallback,
+    statusCode: e.response?.statusCode,
+  );
+
   @override
   Future<Either<Failure, bool>> register(AuthEntity user) async {
     if (await _networkInfo.isConnected) {
@@ -44,12 +49,7 @@ class AuthRepository implements IAuthRepository {
         await _authRemoteDataSource.register(apiModel);
         return const Right(true);
       } on DioException catch (e) {
-        return Left(
-          ApiFailure(
-            message: e.response?.data['message'] ?? 'Registration failed',
-            statusCode: e.response?.statusCode,
-          ),
-        );
+        return Left(_dioFailure(e, 'Registration failed'));
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -88,12 +88,7 @@ class AuthRepository implements IAuthRepository {
         if (apiModel != null) return Right(apiModel.toEntity());
         return const Left(ApiFailure(message: "Invalid credentials"));
       } on DioException catch (e) {
-        return Left(
-          ApiFailure(
-            message: e.response?.data['message'] ?? 'Login failed',
-            statusCode: e.response?.statusCode,
-          ),
-        );
+        return Left(_dioFailure(e, 'Login failed'));
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -124,14 +119,56 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, bool>> logout() async {
     try {
-      // Clear Hive session
       await _authDataSource.logout();
-      // ✅ Clear token from SharedPreferences too
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       return const Right(true);
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
+    }
+  }
+
+  // ── Update Profile ──────────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, AuthEntity>> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String username,
+    String? profilePicturePath,
+  }) async {
+    try {
+      final model = await _authRemoteDataSource.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+        username: username,
+        profilePicturePath: profilePicturePath,
+      );
+      return Right(model.toEntity());
+    } on DioException catch (e) {
+      return Left(_dioFailure(e, 'Failed to update profile'));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  // ── Change Password ─────────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, bool>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final success = await _authRemoteDataSource.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return Right(success);
+    } on DioException catch (e) {
+      return Left(_dioFailure(e, 'Failed to change password'));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
     }
   }
 }

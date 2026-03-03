@@ -3,6 +3,7 @@ import 'package:softbuzz_app/features/auth/domain/usecases/get_current_user_usec
 import 'package:softbuzz_app/features/auth/domain/usecases/login_usecase.dart';
 import 'package:softbuzz_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:softbuzz_app/features/auth/domain/usecases/register_usecase.dart';
+import 'package:softbuzz_app/features/auth/domain/usecases/profile_usecases.dart';
 import 'package:softbuzz_app/features/auth/presentation/state/auth_state.dart';
 
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
@@ -14,6 +15,8 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LoginUsecase _loginUsecase;
   late final GetCurrentUserUsecase _getCurrentUserUsecase;
   late final LogoutUsecase _logoutUsecase;
+  late final UpdateProfileUsecase _updateProfileUsecase;
+  late final ChangePasswordUsecase _changePasswordUsecase;
 
   @override
   AuthState build() {
@@ -21,6 +24,8 @@ class AuthViewModel extends Notifier<AuthState> {
     _loginUsecase = ref.read(loginUsecaseProvider);
     _getCurrentUserUsecase = ref.read(getCurrentUserUsecaseProvider);
     _logoutUsecase = ref.read(logoutUsecaseProvider);
+    _updateProfileUsecase = ref.read(updateProfileUsecaseProvider);
+    _changePasswordUsecase = ref.read(changePasswordUsecaseProvider);
     return const AuthState();
   }
 
@@ -32,7 +37,6 @@ class AuthViewModel extends Notifier<AuthState> {
     required String password,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
-
     final result = await _registerUsecase(
       RegisterParams(
         firstName: firstName,
@@ -42,7 +46,6 @@ class AuthViewModel extends Notifier<AuthState> {
         username: username,
       ),
     );
-
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.error,
@@ -54,11 +57,9 @@ class AuthViewModel extends Notifier<AuthState> {
 
   Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading);
-
     final result = await _loginUsecase(
       LoginParams(email: email, password: password),
     );
-
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.error,
@@ -71,9 +72,7 @@ class AuthViewModel extends Notifier<AuthState> {
 
   Future<void> getCurrentUser() async {
     state = state.copyWith(status: AuthStatus.loading);
-
     final result = await _getCurrentUserUsecase();
-
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.unauthenticated,
@@ -86,9 +85,7 @@ class AuthViewModel extends Notifier<AuthState> {
 
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
-
     final result = await _logoutUsecase();
-
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.error,
@@ -101,7 +98,73 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
+  // ── Update Profile ──────────────────────────────────────────────────────────
+
+  Future<bool> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String username,
+    String? profilePicturePath,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+    final result = await _updateProfileUsecase(
+      UpdateProfileParams(
+        firstName: firstName,
+        lastName: lastName,
+        username: username,
+        profilePicturePath: profilePicturePath,
+      ),
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          errorMessage: failure.message,
+        );
+        return false;
+      },
+      (updatedUser) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: updatedUser,
+        );
+        return true;
+      },
+    );
+  }
+
+  // ── Change Password ─────────────────────────────────────────────────────────
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+    final result = await _changePasswordUsecase(
+      ChangePasswordParams(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      ),
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          errorMessage: failure.message,
+        );
+        return false;
+      },
+      (success) {
+        state = state.copyWith(status: AuthStatus.authenticated);
+        return success;
+      },
+    );
+  }
+
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      errorMessage: null,
+    );
   }
 }

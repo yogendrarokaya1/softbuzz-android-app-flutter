@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:softbuzz_app/features/auth/presentation/view_model/auth_viewmodel.dart';
+import 'package:softbuzz_app/features/auth/presentation/pages/edit_profile_page.dart';
+import 'package:softbuzz_app/features/auth/presentation/pages/change_password_page.dart';
 import 'package:softbuzz_app/features/dashboard/presentation/widgets/softbuzz_app_bar.dart';
 import 'package:softbuzz_app/features/matches/presentation/pages/matches_screen.dart';
 import 'package:softbuzz_app/features/news/presentation/pages/news_screen.dart';
@@ -10,8 +12,7 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authViewModelProvider);
-    final user = authState.user;
+    final user = ref.watch(authViewModelProvider).user;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -22,12 +23,21 @@ class MoreScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Profile card ────────────────────────────────────────
+          // ── Profile Card ─────────────────────────────────────────
           if (user != null) ...[
-            _ProfileCard(user: user),
+            _ProfileCard(
+              user: user,
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                );
+              },
+            ),
             const SizedBox(height: 20),
           ],
 
+          // ── Cricket ──────────────────────────────────────────────
           _SectionLabel('Cricket'),
           _MenuItem(
             icon: Icons.sports_cricket,
@@ -51,23 +61,31 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // ── Account ───────────────────────────────────────────────
           _SectionLabel('Account'),
           _MenuItem(
             icon: Icons.person_outline,
             iconColor: const Color(0xFFa855f7),
             label: 'Edit Profile',
             isDark: isDark,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+            ),
           ),
           _MenuItem(
             icon: Icons.lock_outline,
             iconColor: const Color(0xFFf97316),
             label: 'Change Password',
             isDark: isDark,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+            ),
           ),
           const SizedBox(height: 16),
 
+          // ── App ───────────────────────────────────────────────────
           _SectionLabel('App'),
           _MenuItem(
             icon: Icons.info_outline,
@@ -85,6 +103,7 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          // ── Logout ────────────────────────────────────────────────
           if (user != null)
             SizedBox(
               width: double.infinity,
@@ -119,12 +138,18 @@ class MoreScreen extends ConsumerWidget {
   }
 }
 
+// ── Profile Card ──────────────────────────────────────────────────────────────
+
 class _ProfileCard extends StatelessWidget {
   final dynamic user;
-  const _ProfileCard({required this.user});
+  final VoidCallback onEdit;
+  const _ProfileCard({required this.user, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
+    final hasImage =
+        user.profilePicture != null && user.profilePicture!.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -133,25 +158,30 @@ class _ProfileCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF0f172a), Color(0xFF1e293b)],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: const Color(0xFF22c55e),
-            child: Text(
-              (user.firstName?.isNotEmpty == true ? user.firstName![0] : 'U')
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                fontFamily: 'Inter',
-              ),
+          // Avatar with network image support
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF22c55e), width: 2),
+            ),
+            child: ClipOval(
+              child: hasImage
+                  ? Image.network(
+                      user.profilePicture!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _AvatarFallback(name: user.firstName ?? 'U'),
+                    )
+                  : _AvatarFallback(name: user.firstName ?? 'U'),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,20 +195,44 @@ class _ProfileCard extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
+                if (user.username?.isNotEmpty == true)
+                  Text(
+                    '@${user.username}',
+                    style: const TextStyle(
+                      color: Color(0xFF22c55e),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
                 if (user.email?.isNotEmpty == true)
                   Text(
                     user.email!,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    style: const TextStyle(color: Colors.white38, fontSize: 11),
                   ),
               ],
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: Colors.white54,
-              size: 18,
+          // Edit button
+          GestureDetector(
+            onTap: onEdit,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22c55e).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF22c55e).withOpacity(0.4),
+                ),
+              ),
+              child: const Text(
+                'Edit',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: Color(0xFF22c55e),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
@@ -187,10 +241,33 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
+class _AvatarFallback extends StatelessWidget {
+  final String name;
+  const _AvatarFallback({required this.name});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF22c55e),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : 'U',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Reusable widgets ──────────────────────────────────────────────────────────
+
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel(this.label);
-
   @override
   Widget build(BuildContext context) {
     return Padding(

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = true;
+  static const bool isPhysicalDevice = false;
   static const String _ipAddress = '192.168.1.67';
   static const int _port = 5050;
 
@@ -27,6 +27,7 @@ class ApiEndpoints {
   static const String login = '/api/auth/login';
   static const String whoAmI = '/api/auth/whoami';
   static const String updateProfile = '/api/auth/update-profile';
+  static const String changePassword = '/api/auth/update-profile';
   static const String requestPasswordReset = '/api/auth/request-password-reset';
   static String resetPassword(String token) =>
       '/api/auth/reset-password/$token';
